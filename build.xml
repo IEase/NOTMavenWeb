@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="GBK"?>
-<project name="NOTMavenWeb" default="deploy" basedir=".">
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="NOTMavenWeb" basedir=".">
     <property environment="env" />
     <property name="webapp.name" value="NOTMavenWeb" />
     <property name="catalina.home" value="D:/gitDemo/jenkins/apache-tomcat-7.0.92" />
@@ -43,16 +43,16 @@
     </target>
     
     
-    <!-- 删除之前的目录结构 -->
+    <!-- 删除之前的目录结构 
     <target name="clear" description="清理旧文件">
         <delete dir="${build.dir}" />
         <delete dir="${dist.dir}" />
         <delete file="${catalina.home}/webapps/${webapp.name}.war" />
         <delete dir="${catalina.home}/webapps/${webapp.name}" />
-    </target>
+    </target>-->
  
-    <!-- 创建目录结构 -->
-    <target name="init" depends="clear" description="创建初始化目录结构">
+    <!-- 创建目录结构 depends="clear"-->
+    <target name="init" description="创建初始化目录结构">
         <mkdir dir="${build.dir}/classes" />
         <mkdir dir="${dist.dir}" />
     </target>
@@ -107,11 +107,11 @@
         <echo message="end war..." />
     </target>
  
-    <!-- copy war包 tomcat的deploy目录 -->
+    <!-- copy war包 tomcat的deploy目录 
     <target name="deploy" depends="war" description="部署项目">
         <echo message="begin deploy..." />
         <copy file="${dist.dir}/${webapp.name}.war" todir="${catalina.home}/webapps" />
         <echo message="end deploy..." />
-    </target>
+    </target>-->
  
 </project>
