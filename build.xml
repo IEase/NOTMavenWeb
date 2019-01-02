@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="NOTMavenWeb" basedir=".">
-    <property environment="env" />
+<project name="NOTMavenWeb" default="war" basedir=".">
     <property name="webapp.name" value="NOTMavenWeb" />
-    <property name="catalina.home" value="D:/gitDemo/jenkins/apache-tomcat-7.0.92" />
     <property name="dist.dir" value="${basedir}/dist" />
     <property name="ant.dir" value="C:/Program Files/Ant/apache-ant-1.10.5" />
     <property name="webRoot.dir" value="${basedir}/WebContent" />
@@ -10,108 +8,57 @@
     <property name="resources.dir" value="${basedir}/resources" />
     <property name="lib.dir" value="${webRoot.dir}/WEB-INF/lib" />
     <property name="build.dir" value="${basedir}/build" />
-    <!-- 使用eclipse jdt进行编译，而不使用JDK编译  -->
-    <!-- <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter" />  -->
-    <!-- <property name="build.compiler" value="/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-3.b13.el6_10.x86_64" /> -->
+    <property name="jdk.javac" value="C:\Program Files\Java\jdk1.6.0_29\bin\javac" />
+	
+	<!-- 删除之前的目录结构 -->
+	<target name="clear" description="清理旧文件">
+		<delete dir="${build.dir}" />
+		<echo message="delete dir ${build.dir}" />
+		<delete dir="${dist.dir}" />
+		<echo message="delete dir ${dist.dir}" />
+		<delete file="${catalina.home}/webapps/${webapp.name}.war" />
+		<echo message="delete file catalina.home}/webapps/${webapp.name}.war" />
+	</target>
 
-    <!-- 初始化classpath -->
-    <path id="project.classpath">
-        <fileset dir="${lib.dir}">
-            <include name="**/*.jar" />
-        </fileset>
-        <!-- 添加tomcat类路径 -->
-        <fileset dir="${catalina.home}/lib">
-            <include name="*.jar" />
-        </fileset>
-        <!-- ant lib包  -->
-        <fileset dir="${ant.dir}">
-            <include name="**/*.jar" />
-        </fileset>
-    </path>
- 
-    <!-- get the source compile classpath in a printable form -->
-    <pathconvert pathsep="${line.separator}|   |-- "
-             property="echo.path.compile"
-             refid="project.classpath">
-    </pathconvert>
-    
-    <!-- show classpath jars -->
-    <target name="print_classpath">
-        <echo message="|-- compile classpath"/>
-        <echo message="|   |"/>
-        <echo message="|   |-- ${echo.path.compile}"/>
-    </target>
-    
-    
-    <!-- 删除之前的目录结构 
-    <target name="clear" description="清理旧文件">
-        <delete dir="${build.dir}" />
-        <delete dir="${dist.dir}" />
-        <delete file="${catalina.home}/webapps/${webapp.name}.war" />
-        <delete dir="${catalina.home}/webapps/${webapp.name}" />
-    </target>-->
- 
-    <!-- 创建目录结构 depends="clear"-->
-    <target name="init" description="创建初始化目录结构">
+    <!-- 创建目录结构 -->
+    <target name="init" depends="clear" description="创建初始化目录结构">
         <mkdir dir="${build.dir}/classes" />
+        <echo message="mkdir ${build.dir}/classes" />
         <mkdir dir="${dist.dir}" />
+        <echo message="mkdir ${dist.dir}" />
     </target>
- 
-    <!-- 编译java -->
-    <target name="compile" depends="init" description="编译java文件">
-        <echo message="begin compile..." />
-        <javac srcdir="${src.dir}" destdir="${build.dir}/classes" 
-            includeantruntime="false" nowarn="on" 
-            source="1.8" target="1.8" deprecation="true" debug="true" 
-            encoding="UTF-8" classpathref="project.classpath" 
-            >
-            <!-- <compilerarg line="-XDignore.symbol.file"/> -->
-            <compilerarg line="-Xlint:unchecked" />
-            <!-- <classpath refid="project.classpath" /> -->
-        </javac>
-        <copydir dest="${build.dir}/classes" src="${resources.dir}" /> 
-        <!-- <copy todir="${build.dir}">
-            <fileset dir="${resources.dir}">
-                <include name="**/**/*.xml" />
-                <include name="**/**/*.ftl" />
-                <include name="**/*.xml" />
-                <include name="*.xml" />
-                <include name="*.properties" />
-            </fileset>
-        </copy> -->
-        <echo message="end compile..." />
-    </target>
- 
-    <!-- 将class文件打成 jar包 -->
-    <!--  
-        <target name="pack" depends="compile"> 
-            <jar jarfile="${build.dir}/${webapp.name}.jar"> 
-                <fileset dir="${build.dir}/classes"> 
-                    <include name="**/*.class"/> 
-                </fileset> 
-            </jar> 
-        </target> 
-    -->
- 
-    <!-- 打成war包, 名称默认为 项目名 -->
+
+	<path id="classpath">
+		<fileset file="${lib.dir}/*.jar" />
+	</path>
+	<!-- 编译java -->
+    <target name="compile" depends="init">
+    	<echo message="begin compile..." />
+	   	<javac srcdir="${src.dir}" destdir="${build.dir}/classes" includeantruntime="false" fork="true" executable="${jdk.javac}">
+	        <!-- 这里指定依赖的lib库路径 -->
+	   		<classpath refid="classpath" />
+	   	</javac>
+	   	<echo message="end compile..." />
+	</target>
+
+    <!-- 定义默认任务，将class文件集合成jar包。 -->
     <target name="war" depends="compile" description="将工程打成war包">
-        <echo message="begin war..." />
-        <war destfile="${dist.dir}/${webapp.name}.war" basedir="${webRoot.dir}" 
-            webxml="${webRoot.dir}/WEB-INF/web.xml">
-            <lib dir="${lib.dir}" />
-            <classes dir="${build.dir}/classes" />
-            <fileset dir="${webRoot.dir}">
-                <include name="***.*" />
+    	<echo message="begin war..." />
+        <!-- 删除原有war包。 -->
+        <delete dir="${dist.dir}/${webapp.name}.war" />
+        <!-- 建立新war包。 -->
+        <war destfile="${dist.dir}/${webapp.name}.war" webxml="${basedir}/WebContent/WEB-INF/web.xml">
+            <!-- 将非jar和非class文件拷贝到war包的对应路径下。 -->
+            <fileset dir="${basedir}/WebContent">
+                <include name="**/**.*" />
+                <exclude name="**/*.jar"/>
+                <exclude name="**/*.class"/>
             </fileset>
+            <!-- 将jar和class文件拷贝到war包的对应路径下。 -->
+            <lib dir="${basedir}/WebContent/WEB-INF/lib" />
+            <classes dir="${basedir}/build" />
         </war>
         <echo message="end war..." />
     </target>
- 
-    <!-- copy war包 tomcat的deploy目录 
-    <target name="deploy" depends="war" description="部署项目">
-        <echo message="begin deploy..." />
-        <copy file="${dist.dir}/${webapp.name}.war" todir="${catalina.home}/webapps" />
-        <echo message="end deploy..." />
-    </target>-->
  
 </project>
