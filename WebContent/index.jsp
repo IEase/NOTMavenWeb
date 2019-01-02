@@ -4,9 +4,9 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Insert title here</title>
+<title>标题</title>
 </head>
 <body>
-	这个是非maven项目V1
+	这个是非maven项目V2
 </body>
 </html>
